@@ -48,8 +48,11 @@ AI-assisted programming tools were used throughout the development of this proje
 
 ## Screenshots
 
-![Options Screen](docs/screenshots/settings.png)
-![Transmission Display](docs/screenshots/tx.png)
+<p align="center">
+  <img src="docs/screenshots/settings.png" alt="Options Screen" width="300"/>
+  <img src="docs/screenshots/tx.png" alt="Transmission Display" width="300"/>
+</p>
+
 
 ## Download
 
