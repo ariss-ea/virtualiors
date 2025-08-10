@@ -135,7 +135,8 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     @Composable
     private fun VirtualIORSApp(window: Window, permissions: Array<String>) {
         val ctx = LocalContext.current
-        val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current
+
+        // Permissions state
         var permissionsGranted by remember {
             mutableStateOf(
                 permissions.all { p ->
@@ -153,93 +154,94 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                 ContextCompat.checkSelfPermission(ctx, p) == PackageManager.PERMISSION_GRANTED
             }
         }
+
+        // App state
         var transmissionState by remember { mutableStateOf<TransmissionState>(TransmissionState.Idle) }
         var currentConfig by remember { mutableStateOf<Config?>(null) }
         var transmitJob by remember { mutableStateOf<Job?>(null) }
         var presetsState by remember { mutableStateOf(loadPresets()) }
         var configVersion by remember { mutableStateOf(0L) }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            MaterialTheme(
-                colorScheme = dynamicDarkColorScheme(ctx).run {
-                    if (isSystemInDarkTheme()) this else dynamicLightColorScheme(ctx)
-                },
-                typography = Typography()
-            ) {
-                val barColor = MaterialTheme.colorScheme.background.toArgb()
-                val darkIcons = !isSystemInDarkTheme()
+        // Theming: dynamic colors on Android 12+; static schemes on older devices
+        val dark = isSystemInDarkTheme()
+        val scheme = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (dark) dynamicDarkColorScheme(ctx) else dynamicLightColorScheme(ctx)
+        } else {
+            if (dark) darkColorScheme() else lightColorScheme()
+        }
 
-                SideEffect {
-                    WindowCompat.getInsetsController(window, window.decorView).apply {
-                        isAppearanceLightStatusBars = darkIcons
-                        isAppearanceLightNavigationBars = darkIcons
-                    }
-                    // use non-deprecated setters
-                    window.setStatusBarColor(barColor)
-                    window.setNavigationBarColor(barColor)
+        MaterialTheme(colorScheme = scheme, typography = Typography()) {
+            // System bars styling (works across old/new Android)
+            val barColor = MaterialTheme.colorScheme.background.toArgb()
+            val lightBars = !dark
+            SideEffect {
+                val controller = WindowCompat.getInsetsController(window, window.decorView)
+                controller.isAppearanceLightStatusBars = lightBars
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    controller.isAppearanceLightNavigationBars = lightBars
                 }
+                window.statusBarColor = barColor
+                window.navigationBarColor = barColor
+            }
 
-                val isActive = transmissionState is TransmissionState.Active
-                DisposableEffect(isActive) {
-                    if (isActive) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                    onDispose { window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
-                }
+            // Keep screen on while transmitting
+            val isActive = transmissionState is TransmissionState.Active
+            DisposableEffect(isActive) {
+                if (isActive) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                onDispose { window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
+            }
 
-                Surface(Modifier.fillMaxSize(), color = colorScheme.background) {
-                    if (!permissionsGranted) {
-                        PermissionGate(onGrant = { permissionLauncher.launch(permissions) })
-                    } else {
-                        Column(
-                            Modifier
-                                .fillMaxSize()
-                                .systemBarsPadding()
-                        ) {
-                            TopLogoCard()
+            Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                if (!permissionsGranted) {
+                    PermissionGate(onGrant = { permissionLauncher.launch(permissions) })
+                } else {
+                    Column(
+                        Modifier
+                            .fillMaxSize()
+                            .systemBarsPadding()
+                    ) {
+                        TopLogoCard()
 
-                            AnimatedContent(
-                                targetState = transmissionState,
-                                transitionSpec = {
-                                    fadeIn(tween(500)) togetherWith fadeOut(tween(200))
-                                },
-                                modifier = Modifier.weight(1f)
-                            ) { state ->
-                                when (state) {
-                                    TransmissionState.Idle -> OptionsScreen(
-                                        initialConfig = currentConfig,
-                                        configVersion = configVersion,
-                                        onStart = { cfg ->
-                                            currentConfig = cfg
-                                            transmitJob?.cancel()
-                                            transmitJob = coroutineScope.launch {
-                                                startTransmission(cfg) { s -> transmissionState = s }
-                                                transmissionState = TransmissionState.Idle
-                                            }
-                                        },
-                                        onPresetSave = { name, cfg ->
-                                            savePreset(name, cfg)
-                                            presetsState = loadPresets()
-                                        },
-                                        onPresetLoad = { preset ->
-                                            currentConfig = preset.config
-                                            configVersion++
-                                        },
-                                        onPresetDelete = { preset ->
-                                            deletePreset(preset)
-                                            presetsState = loadPresets()
-                                        },
-                                        presets = presetsState
-                                    )
-
-                                    is TransmissionState.Active -> TransmissionDisplay(
-                                        state,
-                                        onStop = {
-                                            transmitJob?.cancel()
-                                            transmitJob = null
+                        AnimatedContent(
+                            targetState = transmissionState,
+                            transitionSpec = { fadeIn(tween(500)) togetherWith fadeOut(tween(200)) },
+                            modifier = Modifier.weight(1f)
+                        ) { state ->
+                            when (state) {
+                                TransmissionState.Idle -> OptionsScreen(
+                                    initialConfig = currentConfig,
+                                    configVersion = configVersion,
+                                    onStart = { cfg ->
+                                        currentConfig = cfg
+                                        transmitJob?.cancel()
+                                        transmitJob = coroutineScope.launch {
+                                            startTransmission(cfg) { s -> transmissionState = s }
                                             transmissionState = TransmissionState.Idle
                                         }
-                                    )
+                                    },
+                                    onPresetSave = { name, cfg ->
+                                        savePreset(name, cfg)
+                                        presetsState = loadPresets()
+                                    },
+                                    onPresetLoad = { preset ->
+                                        currentConfig = preset.config
+                                        configVersion++
+                                    },
+                                    onPresetDelete = { preset ->
+                                        deletePreset(preset)
+                                        presetsState = loadPresets()
+                                    },
+                                    presets = presetsState
+                                )
 
-                                }
+                                is TransmissionState.Active -> TransmissionDisplay(
+                                    state,
+                                    onStop = {
+                                        transmitJob?.cancel()
+                                        transmitJob = null
+                                        transmissionState = TransmissionState.Idle
+                                    }
+                                )
                             }
                         }
                     }
@@ -247,6 +249,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             }
         }
     }
+
 
 
     /*────────────────────────────  UI COMPONENTS  ───────────────────────────*/
@@ -675,7 +678,16 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = useTts, onCheckedChange = { useTts = it })
+                        Checkbox(
+                            checked = useTts,
+                            onCheckedChange = { checked ->
+                                useTts = checked
+                                if (!checked) {
+                                    useExternalTtsAudio = false
+                                    ttsAudioUri = null
+                                }
+                            }
+                        )
                         Spacer(Modifier.width(8.dp))
                         Text("Enable voice announcements (TTS)")
                     }
@@ -696,7 +708,8 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                                     onCheckedChange = {
                                         useExternalTtsAudio = it
                                         if (!it) ttsAudioUri = null
-                                    }
+                                    },
+                                    enabled = useTts
                                 )
                                 Spacer(Modifier.width(4.dp))
                                 Text("Use custom audio instead")
