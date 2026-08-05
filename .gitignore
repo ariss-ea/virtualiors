@@ -8,8 +8,12 @@
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
 .DS_Store
-/build
+**/build/
+/.kotlin/
 /captures
 .externalNativeBuild
 .cxx
 local.properties
+
+# Generated release artifacts belong in GitHub Releases, not source control.
+/app/release/

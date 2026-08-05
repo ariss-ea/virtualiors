@@ -7,7 +7,7 @@
 
 [![Compose Status](https://img.shields.io/badge/Jetpack%20Compose-enabled-brightgreen.svg)](#)
 
-VirtualIORS is an open-source Android application by ARISS-EA Team designed to simulate the ARISS IORS payload on the International Space Station for educational purposes. Currently, it simulates SSTV transmissions in the same way they are done from the ISS. Plus, it adds other features described in [Features](#features).
+VirtualIORS is an open-source Android application by ARISS-EA Team designed to emulate the ARISS IORS payload on the International Space Station for educational purposes. It recreates ISS-style SSTV transmissions and adds optional voice and APRS signals for classroom activities, demonstrations and amateur radio activities.
 
 # Authors
 
@@ -22,6 +22,7 @@ AI-assisted programming tools were used throughout the development of this proje
 
 * [Features](#features)
 * [Screenshots](#screenshots)
+* [Download](#download)
 * [Usage](#usage)
 * [Configuration & Presets](#configuration--presets)
 * [Permissions](#permissions)
@@ -30,21 +31,31 @@ AI-assisted programming tools were used throughout the development of this proje
 
     * [Prerequisites](#prerequisites)
     * [Building](#building)
+* [Acknowledgements](#acknowledgements)
 * [Contributing](#contributing)
 * [Links](#links)
 
 ## Features
 
-* Select and order ≥12 SSTV audio files (`.wav` / `.mp3`) via a multiple-file picker
-* Optional TTS announcements:
+* Three ways to prepare an SSTV transmission:
 
-    * Built‑in TTS engine (on‑device) - beware voice audio level may be low
-    * Custom external TTS audio file support
-    * Configure when it speaks (every *N* images)
-* Shuffle or sequential (like the ISS) playback modes
-* Gapless VOX pre‑tone (1s at 1900 Hz) before each image for VOX transmitter keying
-* Cooldown interval between images (configurable seconds; warning under 30 s to avoid transmitter overheating and posible damage)
-* Named presets management (save, load, delete; includes two demo presets with 12 PD120 and 12 Robot36 format images)
+    * **Audio files:** select and order at least 12 compatible SSTV audio files. Use the arrows or drag and drop to arrange them.
+    * **Image files:** select pictures and generate Robot36 or PD120 audio on the device. Images are cropped without stretching and may include a callsign and compact image counter. Images can be ordered by using drag and drop or arrow buttons.
+    * **Automatic camera images:** take a fresh front- or back-camera picture at each SSTV slot, with Robot36/PD120 crop and an optional callsign/UTC timestamp watermark.
+* Optional voice announcements:
+
+    * Use the built-in TTS engine (on-device) or an audio file.
+    * Configure when the announcement plays (every *N* images).
+* Optional APRS packets generated with a standards-based AX.25/Bell 202 encoder:
+
+    * Beacon, GPS position, mobile telemetry and short text message.
+    * Independent interval and packet spacing.
+    * Default source `VIORS` and destination `CQ`.
+* Shuffle or sequential playback modes. Automatic camera mode always captures in sequence.
+* Optional VOX preamble. SSTV and voice use a gapless 1-second 1900 Hz pre-tone; APRS uses a longer AX.25 preamble instead.
+* Cooldown interval between images.
+* Three built-in image demos: **Demo Robot36**, **Demo PD120** and **Demo APRS**.
+* A clear transmission display showing the current signal, what comes next and the remaining time.
 
 ## Screenshots
 
@@ -56,62 +67,80 @@ AI-assisted programming tools were used throughout the development of this proje
 
 ## Download
 
-Head to the Releases area in this Repository.
-App requires Android version **9.0 or newer**
+Head to the Releases area in this repository.
+The app requires Android version **9.0 or newer**.
 
 ## Usage
 
-1. Grant requested permissions on first launch.
-2. In **SSTV Audio Files**, tap **Add audio file** and select ≥12 SSTV audio files.
-3. (Optional) Enable **Voice announcements** and configure:
-
-    * Interval (every N images)
-    * Custom audio file or generated TTS phrase
-4. (Optional) Enable **VOX pre‑tone** for transmitter keying.
-5. Choose **Sequential** or **Shuffle** mode.
-6. Set **Seconds between images** (cooldown).
-7. Press **Start Transmission** to begin SSTV playback.
-8. To stop, tap **Stop Transmission** on the display screen.
+1. Open VirtualIORS and follow the short setup screen.
+2. Choose **Audio**, **Images** or **Camera** in the SSTV Source card.
+3. Add your SSTV files or prepare the automatic camera.
+4. Optionally enable **Voice announcements** and choose on-device TTS or a custom audio file.
+5. Optionally enable **APRS**. The beacon is always included; GPS, telemetry and text are optional.
+6. Set the time between images and choose Sequential or Shuffle when the source supports it.
+7. Enable the VOX preamble if your radio interface needs it. APRS will automatically use a longer packet preamble.
+8. Press **Start Transmission**.
+9. To stop, tap **Stop Transmission** on the display screen.
 
 ## Configuration & Presets
 
-* Save your current settings as a named preset (requires ≥12 audio files).
-* Load or delete custom presets via the **Presets** card.
-* Two built‑in demo presets:
+* Save the current setup as a named preset and load it again from the Presets card.
+* Built-in presets:
 
-    * **Demo Robot36** (Robot 36 SSTV mode)
-    * **Demo PD120** (PD 120 SSTV mode)
+    * **Demo Robot36** — 12 local images encoded as Robot36.
+    * **Demo PD120** — 12 local images encoded as PD120.
+    * **Demo APRS** — Robot36 images with a simple beacon, telemetry and text.
+* Callsign, APRS destination and the optional path are kept in **Settings**. Defaults are `VIORS`, `CQ` and an empty path.
 
 ## Permissions
 
-* **Read media / storage** – to select and play SSTV audio and optional TTS files.
-* **Record audio** – reserved for future APRS/Voice Repeater features; microphone audio is **never** captured or uploaded.
+VirtualIORS works locally. Selected audio and images stay on the device and are opened through Android system pickers.
+
+* **Camera:** requested only when Automatic Camera Images is opened.
+* **Location:** requested only if APRS GPS Position is enabled.
+
+No broad storage permission is required.
 
 ## Safety Warning
 
-**Intervals below 30 seconds between SSTV images can overheat and permanently damage some RF transmitters. The app displays a live warning if you set the cooldown too short.**
+**Intervals below 30 seconds between SSTV images can overheat and permanently damage some RF transmitters. VirtualIORS shows a live warning when the cooldown is too short.**
+
+Use appropriate audio levels and comply with local amateur-radio regulations before connecting a phone to an RF transmitter. The VOX helper opens compatible transmitters but does not replace correct radio configuration.
 
 ## Getting Started
 
 ### Prerequisites
 
-* Android Studio Giraffe or newer
-* Android Gradle Plugin as specified in `build.gradle`
-* JDK 11 or newer
-* Device or emulator running Android 9.0 (API 28) or higher
+* Android Studio with JDK 17
+* Android SDK 37
+* Device or emulator running Android 9.0 (API 28) or higher
 
 ### Building
 
-1. Clone the repository from Android Studio
-2. Open the project in Android Studio.
-3. Let Gradle sync and resolve dependencies.
-4. Build and run on your target device or emulator.
+1. Clone the repository or open the project in Android Studio.
+2. Let Gradle sync and resolve dependencies.
+3. Build and run on your target device or emulator.
+
+Validation commands:
+
+```bash
+./gradlew clean test
+./gradlew :app:assembleDebug
+```
+
+The project contains the Android app and two pure Kotlin/JVM modules: `:sstvtx-core` for SSTV image encoding and `:aprstx-core` for APRS/AX.25/AFSK generation.
+
+## Acknowledgements
+
+* **SSTV Encoder for Android** by Olga Miller, used as the foundation for parts of the SSTV encoder under the Apache License 2.0.
+* **Dire Wolf** by WB2OSZ John Langner, an important APRS/packet-radio implementation and reference.
+* ARISS Team and the teachers and radio amateurs who use VirtualIORS in educational activities.
 
 ## Contributing
 
-Contributions are welcome! Feel free to add any bugs or create any pull request with features you think are interesting.
+Contributions are welcome! Feel free to report bugs, suggest classroom improvements or open a pull request.
 
-*Note:* We're not fully familiar with all aspects of software engineering, particularly when it comes to merging and managing branches. If you're interested in contributing or supporting us, feel free to reach out at info@ariss-ea.org.
+We are still learning some parts of software engineering, particularly around merging and branch management. If you would like to contribute or support the project, please contact us at info@ariss-ea.org.
 
 ## Links
 

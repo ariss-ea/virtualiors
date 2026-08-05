@@ -6,14 +6,14 @@ plugins {
 
 android {
     namespace = "org.arissea.virtualiors"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "org.arissea.virtualiors"
         minSdk = 28
-        targetSdk = 36
-        versionCode = 2
-        versionName = "1.0.1"
+        targetSdk = 37
+        versionCode = 3
+        versionName = "2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -28,18 +28,22 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
 dependencies {
+
+    implementation(project(":aprstx-core"))
+    implementation(project(":sstvtx-core"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -66,4 +70,10 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:1.8.0")
     implementation("androidx.media3:media3-common:1.8.0")
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.androidx.exifinterface)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 }

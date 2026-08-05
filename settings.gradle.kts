@@ -21,3 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "VirtualIORS"
 include(":app")
+include(":aprstx-core")
+include(":sstvtx-core")
