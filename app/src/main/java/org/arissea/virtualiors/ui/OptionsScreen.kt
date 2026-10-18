@@ -1,9 +1,7 @@
 package org.arissea.virtualiors.ui
 
-import android.Manifest
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.speech.tts.TextToSpeech
@@ -103,7 +101,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import androidx.core.content.ContextCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.arissea.virtualiors.camera.CameraCaptureController
@@ -151,15 +148,29 @@ fun OptionsScreen(
         persistReadPermission(context, uri)
         onConfigChange(config.copy(voice = config.voice.copy(externalAudioUri = uri.toString(), useExternalAudio = true)))
     }
-    var startAfterLocationPermission by remember { mutableStateOf(false) }
-    val locationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
-        val shouldStart = startAfterLocationPermission
-        startAfterLocationPermission = false
-        if (result.values.none { it }) {
-            onMessage("Location permission was not granted. The configured no-lock fallback will be used.")
-        }
-        if (shouldStart) onStart()
+    // null = hidden; false = asked from the APRS card; true = asked before starting a transmission.
+    var locationDisclosureForStart by remember { mutableStateOf<Boolean?>(null) }
+    fun closeLocationDisclosure(start: Boolean) {
+        locationDisclosureForStart = null
+        if (start) onStart()
     }
+    LocationDisclosureDialog(
+        visible = locationDisclosureForStart != null,
+        dismissLabel = if (locationDisclosureForStart == true) "Continue without GPS" else "Not now",
+        onGranted = { closeLocationDisclosure(start = locationDisclosureForStart == true) },
+        onDenied = {
+            onMessage("Location permission was not granted. The configured no-lock fallback will be used.")
+            closeLocationDisclosure(start = locationDisclosureForStart == true)
+        },
+        onUsePresetCoordinates = {
+            val forStart = locationDisclosureForStart == true
+            onConfigChange(config.copy(aprs = config.aprs.copy(positionSource = AprsPositionSource.PRESET_COORDINATES)))
+            val presetValid = AprsCoordinateValidator.parse(config.aprs.presetLatitude, config.aprs.presetLongitude) != null
+            if (!presetValid) onMessage("Enter valid preset coordinates in Settings.")
+            closeLocationDisclosure(start = forStart && presetValid)
+        },
+        onDismiss = { closeLocationDisclosure(start = locationDisclosureForStart == true) },
+    )
     var textToSpeech by remember { mutableStateOf<TextToSpeech?>(null) }
     var ttsReady by remember { mutableStateOf(false) }
     DisposableEffect(context) {
@@ -212,11 +223,7 @@ fun OptionsScreen(
             )
             Spacer(Modifier.height(8.dp))
             AprsCard(config, onConfigChange, onMessage) {
-                if (!hasLocation(context)) {
-                    locationPermission.launch(
-                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
-                    )
-                }
+                if (!hasPhoneLocationPermission(context)) locationDisclosureForStart = false
             }
             Spacer(Modifier.height(8.dp))
             VoiceCard(
@@ -246,11 +253,8 @@ fun OptionsScreen(
                         val needsPhoneLocation = config.aprs.enabled &&
                             config.aprs.gpsPositionEnabled &&
                             config.aprs.positionSource == AprsPositionSource.PHONE_GPS
-                        if (needsPhoneLocation && !hasLocation(context)) {
-                            startAfterLocationPermission = true
-                            locationPermission.launch(
-                                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
-                            )
+                        if (needsPhoneLocation && !hasPhoneLocationPermission(context)) {
+                            locationDisclosureForStart = true
                         } else {
                             onStart()
                         }
@@ -1044,7 +1048,3 @@ private fun displayName(context: Context, uri: Uri): String = runCatching {
         if (cursor.moveToFirst()) cursor.getString(0) else null
     }
 }.getOrNull() ?: uri.lastPathSegment?.substringAfterLast(':') ?: "Selected file"
-
-private fun hasLocation(context: Context): Boolean =
-    ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED

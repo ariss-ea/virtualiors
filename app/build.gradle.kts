@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
 
@@ -12,8 +11,8 @@ android {
         applicationId = "org.arissea.virtualiors"
         minSdk = 28
         targetSdk = 37
-        versionCode = 3
-        versionName = "2.0"
+        versionCode = 4
+        versionName = "2.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -30,9 +29,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -76,4 +72,8 @@ dependencies {
     implementation(libs.androidx.camera.view)
     implementation(libs.androidx.exifinterface)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    // camera-view pulls appcompat 1.1.0 / fragment 1.1.0 transitively; Play flags fragment 1.1.0 as outdated.
+    implementation(libs.androidx.fragment)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.core.locationbutton)
 }

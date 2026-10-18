@@ -1,8 +1,8 @@
 [versions]
 activityComposeVersion = "1.9.0"
-agp = "8.12.0"
+agp = "9.2.1"
 composeBomVersion = "2024.05.00"
-kotlin = "2.0.21"
+kotlin = "2.3.21"
 coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -15,6 +15,9 @@ securityCrypto = "1.1.0-beta01"
 camera = "1.5.1"
 exifinterface = "1.4.1"
 lifecycle = "2.9.2"
+fragment = "1.8.9"
+appcompat = "1.7.1"
+locationbutton = "1.0.0-alpha01"
 
 [libraries]
 androidx-activity-compose-v190 = { module = "androidx.activity:activity-compose", version.ref = "activityComposeVersion" }
@@ -43,9 +46,11 @@ androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", versi
 androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "camera" }
 androidx-exifinterface = { module = "androidx.exifinterface:exifinterface", version.ref = "exifinterface" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
+androidx-fragment = { module = "androidx.fragment:fragment", version.ref = "fragment" }
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+androidx-core-locationbutton = { module = "androidx.core.locationbutton:locationbutton", version.ref = "locationbutton" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

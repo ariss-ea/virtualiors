@@ -2,4 +2,10 @@
 <resources>
 
     <style name="Theme.VirtualIORS" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- The AndroidX LocationButton default style reads AppCompat attributes. Colors are set from the
+         Compose color scheme at runtime; this overlay only lets the view inflate on a platform theme. -->
+    <style name="ThemeOverlay.VirtualIORS.LocationButton" parent="">
+        <item name="colorPrimary">@android:color/black</item>
+    </style>
 </resources>

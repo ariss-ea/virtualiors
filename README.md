@@ -26,6 +26,7 @@ AI-assisted programming tools were used throughout the development of this proje
 * [Usage](#usage)
 * [Configuration & Presets](#configuration--presets)
 * [Permissions](#permissions)
+* [Privacy](#privacy)
 * [Safety Warning](#safety-warning)
 * [Getting Started](#getting-started)
 
@@ -87,9 +88,9 @@ The app requires Android version **9.0 or newer**.
 * Save the current setup as a named preset and load it again from the Presets card.
 * Built-in presets:
 
-    * **Demo Robot36** — 12 local images encoded as Robot36.
-    * **Demo PD120** — 12 local images encoded as PD120.
-    * **Demo APRS** — Robot36 images with a simple beacon, telemetry and text.
+    * **Demo Robot36:** 12 local images encoded as Robot36.
+    * **Demo PD120:** 12 local images encoded as PD120.
+    * **Demo APRS:** Robot36 images with a simple beacon, telemetry and text.
 * Callsign, APRS destination and the optional path are kept in **Settings**. Defaults are `VIORS`, `CQ` and an empty path.
 
 ## Permissions
@@ -97,9 +98,18 @@ The app requires Android version **9.0 or newer**.
 VirtualIORS works locally. Selected audio and images stay on the device and are opened through Android system pickers.
 
 * **Camera:** requested only when Automatic Camera Images is opened.
-* **Location:** requested only if APRS GPS Position is enabled.
+* **Location:** requested only if APRS GPS Position is enabled and **Use phone GPS** is selected. Before asking, VirtualIORS explains that the coordinates are placed in APRS packets and, if the phone is connected to a radio transmitter, may be broadcast over radio and received by third parties. Preset coordinates can be used instead.
+
+    * **Android 17 and newer:** location is granted for the current session through the system location button.
+    * **Android 16 and older:** the standard Android location permission prompt is used.
 
 No broad storage permission is required.
+
+## Privacy
+
+Media, camera images and APRS configuration are processed locally on the device. Location is only accessed when phone GPS is selected for APRS.
+
+The privacy policy is available at [ariss-ea.org/virtualiors-privacy](https://ariss-ea.org/virtualiors-privacy/) and inside the app in **Settings > About** and on the setup screen.
 
 ## Safety Warning
 
@@ -111,7 +121,7 @@ Use appropriate audio levels and comply with local amateur-radio regulations bef
 
 ### Prerequisites
 
-* Android Studio with JDK 17
+* Android Studio with its bundled JDK (Gradle 9.4.1 runs on JDK 17 to 25; the app is compiled for Java 17)
 * Android SDK 37
 * Device or emulator running Android 9.0 (API 28) or higher
 

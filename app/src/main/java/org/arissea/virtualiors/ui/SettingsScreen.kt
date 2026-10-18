@@ -1,10 +1,5 @@
 package org.arissea.virtualiors.ui
 
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,7 +14,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Image as ImageIcon
-import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -30,7 +24,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,11 +33,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import org.arissea.virtualiors.BuildConfig
 import org.arissea.virtualiors.model.AppConfig
 import org.arissea.virtualiors.model.AprsCoordinateValidator
@@ -61,7 +52,6 @@ fun SettingsScreen(
     onMessage: (String) -> Unit,
     onBack: () -> Unit,
 ) {
-    val uriHandler = LocalUriHandler.current
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -153,20 +143,7 @@ fun SettingsScreen(
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    TextButton(
-                        onClick = { uriHandler.openUri(SETTINGS_REPOSITORY_URL) }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.OpenInNew,
-                            contentDescription = null
-                        )
-                        Text("View source on GitHub")
-                    }
-                }
+                AboutLinkButtons(repositoryUrl = SETTINGS_REPOSITORY_URL)
             }
         }
     }
@@ -181,11 +158,7 @@ private fun AprsLocationSettingsCard(
     onMessage: (String) -> Unit,
 ) {
     val context = LocalContext.current
-    val locationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
-        if (result.values.none { it }) {
-            onMessage("Location permission was not granted. The configured no-lock fallback will be used.")
-        }
-    }
+    var showLocationDisclosure by remember { mutableStateOf(false) }
     var latitudeDraft by remember(config.aprs.presetLatitude) { mutableStateOf(config.aprs.presetLatitude) }
     var longitudeDraft by remember(config.aprs.presetLongitude) { mutableStateOf(config.aprs.presetLongitude) }
     var pendingSource by remember(config.aprs.positionSource) { mutableStateOf<AprsPositionSource?>(null) }
@@ -241,11 +214,9 @@ private fun AprsLocationSettingsCard(
             source == AprsPositionSource.PHONE_GPS &&
             config.aprs.enabled &&
             config.aprs.gpsPositionEnabled &&
-            !hasLocationPermission(context)
+            !hasPhoneLocationPermission(context)
         ) {
-            locationPermission.launch(
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
-            )
+            showLocationDisclosure = true
         }
     }
 
@@ -258,6 +229,21 @@ private fun AprsLocationSettingsCard(
         pendingNoLockBehavior = null
         onConfigChange(config.copy(aprs = config.aprs.copy(noGpsLockBehavior = behavior)))
     }
+
+    LocationDisclosureDialog(
+        visible = showLocationDisclosure,
+        dismissLabel = "Not now",
+        onGranted = { showLocationDisclosure = false },
+        onDenied = {
+            showLocationDisclosure = false
+            onMessage("Location permission was not granted. The configured no-lock fallback will be used.")
+        },
+        onUsePresetCoordinates = {
+            showLocationDisclosure = false
+            selectSource(AprsPositionSource.PRESET_COORDINATES)
+        },
+        onDismiss = { showLocationDisclosure = false },
+    )
 
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -347,10 +333,6 @@ private fun LocationChoiceRow(label: String, selected: Boolean, onClick: () -> U
         Text(label)
     }
 }
-
-private fun hasLocationPermission(context: Context): Boolean =
-    ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
 @Composable
 private fun AuthorCredit(name: String, university: String) {

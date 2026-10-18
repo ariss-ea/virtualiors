@@ -2,8 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- Precise location is only granted through the Android 17+ location button (session-based).
+         Older Android versions ignore the flag and use the regular runtime prompt. -->
+    <uses-permission
+        android:name="android.permission.ACCESS_FINE_LOCATION"
+        android:usesPermissionFlags="onlyForLocationButton"
+        tools:targetApi="37" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.USE_LOCATION_BUTTON" />
 
     <uses-feature
         android:name="android.hardware.camera.any"
